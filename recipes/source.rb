@@ -34,17 +34,19 @@ end
 
 version = node['python']['version']
 install_path = "#{node['python']['prefix_dir']}/bin/python#{version.split(/(^\d+\.\d+)/)[1]}"
+recompile = node['python']['recompile']
 
 remote_file "#{Chef::Config[:file_cache_path]}/Python-#{version}.tgz" do
   source "#{node['python']['url']}/#{version}/Python-#{version}.tgz"
   checksum node['python']['checksum']
   mode "0644"
-  not_if { ::File.exists?(install_path) && `#{install_path} --version 2>&1`.strip =~ /#{version}/ }
+  not_if { !recompile && ::File.exists?(install_path) && `#{install_path} --version 2>&1`.strip =~ /#{version}/ }
 end
 
 bash "build-and-install-python" do
   cwd Chef::Config[:file_cache_path]
   code <<-EOF
+  rm -rf Python-#{version}
   tar -zxvf Python-#{version}.tgz
   (cd Python-#{version} && ./configure #{configure_options})
   (cd Python-#{version} && make && make #{make_options})
@@ -55,7 +57,7 @@ bash "build-and-install-python" do
       "CXXFLAGS" => "-I#{node['python']['prefix_dir']} -I/usr/lib",
       "CFLAGS" => "-I#{node['python']['prefix_dir']} -I/usr/lib"
   }) if platform?("ubuntu") && node['platform_version'].to_f >= 12.04
-  not_if { ::File.exists?(install_path) && `#{install_path} --version 2>&1`.strip =~ /#{version}/ }
+  not_if { !recompile && ::File.exists?(install_path) && `#{install_path} --version 2>&1`.strip =~ /#{version}/ }
 end
 
 # Link install as the default python, to support Python 3.x
