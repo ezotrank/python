@@ -52,10 +52,10 @@ bash "build-and-install-python" do
   (cd Python-#{version} && make && make #{make_options})
   EOF
   environment({
-      "LDFLAGS" => "-L#{node['python']['prefix_dir']} -L/usr/lib",
-      "CPPFLAGS" => "-I#{node['python']['prefix_dir']} -I/usr/lib",
-      "CXXFLAGS" => "-I#{node['python']['prefix_dir']} -I/usr/lib",
-      "CFLAGS" => "-I#{node['python']['prefix_dir']} -I/usr/lib"
+      "LDFLAGS" => "-L#{node['python']['prefix_dir']} -L/usr/local/ssl/lib -L/usr/lib",
+      "CPPFLAGS" => "-I#{node['python']['prefix_dir']} -I/usr/local/ssl/lib -I/usr/lib",
+      "CXXFLAGS" => "-I#{node['python']['prefix_dir']} -I/usr/local/ssl/lib -I/usr/lib",
+      "CFLAGS" => "-I#{node['python']['prefix_dir']} -I/usr/local/ssl/lib -I/usr/lib"
   }) if platform?("ubuntu") && node['platform_version'].to_f >= 12.04
   not_if { !recompile && ::File.exists?(install_path) && `#{install_path} --version 2>&1`.strip =~ /#{version}/ }
 end
